@@ -1,0 +1,215 @@
+		PRIMES BENCHMARK on lubuntu-18.04-amd64		2020-04-07
+		---------------------------------------
+
+# MACHINE:	FMV-A8390
+# CPU:		Intel(R) Core(TM) i5 CPU       M 520  @ 2.40GHz
+# MEMORY:	4GB
+
+# ruby 2.7.1p83
+okadan@i5:~/PRIMES$ time ruby primesf.rb 
+
+real	11m27.392s
+user	11m27.038s
+sys	0m0.156s
+
+# Gauche scheme shell, version 0.9.9
+okadan@i5:~/PRIMES$ time gosh primesq.scm
+
+real	10m40.029s
+user	10m39.770s
+sys	0m0.144s
+
+# digamma 0.1.7
+okadan@i5:~/PRIMES$ time digamma --heap-limit=1024 primesq.scm
+
+real	7m36.927s
+user	7m46.610s
+sys	0m0.168s
+
+# guile (GNU Guile) 3.0.2
+okadan@i5:~/PRIMES$ time guile primesq.scm
+
+real	5m57.710s
+user	5m57.541s
+sys	0m0.084s
+
+# Larceny v1.3 "Grain Alcohol and Rainwater"
+okadan@i5:~/PRIMES$ time scheme-script primesq2.scm
+
+real	2m41.352s
+user	2m40.521s
+sys	0m0.109s
+
+# Ikarus Scheme version 0.0.4-rc1+, 64-bit
+okadan@i5:~/PRIMES$ time ikarus --r6rs-script primesq2.scm
+
+real	2m35.209s
+user	2m34.778s
+sys	0m0.184s
+
+# SBCL 1.4.5.debian
+okadan@i5:~/PRIMES$ time sbcl --script primesq.lisp
+
+real	3m18.622s
+user	3m17.638s
+sys	0m0.160s
+
+#--------------------------------------------------#
+#       primesf.rb
+
+def is_prime(x, prime_list)
+  prime_list.each do |p|
+    return true if p * p > x
+    return false if x % p == 0
+  end
+  true
+end
+
+primes = []
+
+3.step(100000000, 2) do |x|
+  primes.push(x) if is_prime(x, primes)
+end
+
+primes = [2] + primes
+
+#--------------------------------------------------#
+;;;     primesq.scm
+
+;; queue
+(define (make-queue)
+  (let ((queue (cons '() '())))
+    (set-car! queue queue)
+    queue))
+
+(define (en-queue! queue x)
+  (let ((q (cons x '())))
+    (set-cdr! (car queue) q)
+    (set-car! queue q)
+    queue))
+
+(define (de-queue! queue)
+  (let* ((lst (cdr queue))
+         (val (car lst))
+         (rest (cdr lst)))
+    (set-cdr! queue rest)
+    (if (null? rest)
+	(set-car! queue queue))
+    val))
+
+(define (get-list queue) (cdr queue))
+
+;; primes
+(define (is-prime p-lst x)
+  (if (null? p-lst) #t
+      (let ((p (car p-lst)))
+	(cond ((> (* p p) x) #t)
+	      ((= 0 (modulo x p)) #f)
+	      (else (is-prime (cdr p-lst) x))))))
+
+(define (primes queue x xmax)
+  (cond ((> x xmax)
+	 (get-list queue))
+	((is-prime (get-list queue) x)
+	 (primes (en-queue! queue x) (+ x 2) xmax))
+	(else
+	 (primes queue (+ x 2) xmax))))
+
+;; main
+(cons 2 (primes (make-queue) 3 100000000))
+
+#--------------------------------------------------#
+;;;     primesq2.scm
+
+(import (rnrs) (rnrs mutable-pairs))
+
+;; queue
+(define (make-queue)
+  (let ((queue (cons '() '())))
+    (set-car! queue queue)
+    queue))
+
+(define (en-queue! queue x)
+  (let ((q (cons x '())))
+    (set-cdr! (car queue) q)
+    (set-car! queue q)
+    queue))
+
+(define (de-queue! queue)
+  (let* ((lst (cdr queue))
+         (val (car lst))
+         (rest (cdr lst)))
+    (set-cdr! queue rest)
+    (if (null? rest)
+	(set-car! queue queue))
+    val))
+
+(define (get-list queue) (cdr queue))
+
+;; primes
+(define (is-prime p-lst x)
+  (if (null? p-lst) #t
+      (let ((p (car p-lst)))
+	(cond ((> (* p p) x) #t)
+	      ((= 0 (mod x p)) #f)
+	      (else (is-prime (cdr p-lst) x))))))
+
+(define (primes queue x xmax)
+  (cond ((> x xmax)
+	 (get-list queue))
+	((is-prime (get-list queue) x)
+	 (primes (en-queue! queue x) (+ x 2) xmax))
+	(else
+	 (primes queue (+ x 2) xmax))))
+
+;; main
+(cons 2 (primes (make-queue) 3 100000000))
+
+#--------------------------------------------------#
+;;;     primesq.lisp
+
+;; queue
+(setf *print-circle* t)
+
+(defun make-queue ()
+  (let ((queue (cons nil nil)))
+    (setf (car queue) queue)
+    queue))
+
+(defun en-queue (queue x)
+  (let ((q (cons x nil)))
+    (setf (cdar queue) q)
+    (setf (car queue) q)
+    queue))
+
+(defun de-queue (queue)
+  (let* ((lst (cdr queue))
+         (val (car lst))
+         (rest (cdr lst)))
+    (setf (cdr queue) rest)
+    (if (null rest) (setf (car queue) queue))
+    val))
+
+(defun get-list (queue) (cdr queue))
+
+;; primes
+(defun is-prime (p-list x)
+  (if (null p-list) t
+      (let ((p (car p-list)))
+	(cond ((> (* p p) x) t)
+	      ((= 0 (mod x p)) nil)
+	      (t (is-prime (cdr p-list) x))))))
+
+(defun primes (queue x max)
+  (cond ((> x max)
+	 (cons 2 (get-list queue)))
+	((is-prime (get-list queue) x)
+	 (primes (en-queue queue x) (+ x 2) max))
+	(t (primes queue (+ x 2) max))))
+
+;; main
+(primes (make-queue) 3 100000000)
+
+#--------------------------------------------------#
+
+
