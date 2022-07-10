@@ -37,4 +37,4 @@
                      (set! rtn pvect))))
     (set! px (+ px 2))))
 
-(display (primes))
+(primes)

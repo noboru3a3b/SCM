@@ -41,9 +41,9 @@ sys	0m0.088s
 
 okadan@i5:~/PRIMES$ time ypsilon primesv.scm  <--- NG
 
-real	7m24.159s
-user	7m30.341s
-sys	0m0.060s
+real	6m50.178s
+user	6m56.220s
+sys	0m0.108s
 
 # guile (GNU Guile) 3.0.7
 okadan@i5:~/PRIMES$ time guile primesq.scm
@@ -54,9 +54,9 @@ sys	0m0.041s
 
 okadan@i5:~/PRIMES$ time guile primesv.scm  <--- OK
 
-real	3m47.953s
-user	4m6.513s
-sys	0m0.546s
+real	3m47.356s
+user	4m8.899s
+sys	0m0.429s
 
 # Racket v7.2.
 okadan@i5:~/PRIMES$ time racket primesq3.scm 
@@ -67,9 +67,9 @@ sys	0m0.088s
 
 okadan@i5:~/PRIMES$ time racket primesv3.scm  <--- NG
 
-real	3m54.560s
-user	3m49.752s
-sys	0m2.178s
+real	4m7.577s
+user	4m2.514s
+sys	0m2.250s
 
 # Chez Scheme Version 9.5
 okadan@i5:~/PRIMES$ time chezscheme9.5 --script primesq2.scm
@@ -80,9 +80,21 @@ sys	0m0.041s
 
 okadan@i5:~/PRIMES$ time chezscheme9.5 --script primesv.scm  <--- OK
 
-real	2m24.570s
-user	2m23.388s
+real	2m40.150s
+user	2m38.967s
 sys	0m1.172s
+
+okadan@i5:~/CPP_Lisp2$ time chezscheme9.5 --script primesq2.scm (10倍リミットテスト)
+50847534
+real	38m45.477s
+user	38m45.073s
+sys	0m0.316s
+
+okadan@i5:~/CPP_Lisp2$ time chezscheme9.5 --script primesv.scm (10倍バッファサイズテスト)
+
+real	69m43.321s
+user	66m8.799s
+sys	3m34.240s
 
 # Larceny v1.3 "Grain Alcohol and Rainwater"
 okadan@i5:~/PRIMES$ time scheme-script primesq2.scm
@@ -93,6 +105,12 @@ sys	0m0.093s
 
 okadan@i5:~/PRIMES$ time scheme-script primesv2.scm  <--- NG!(メモリオーバー)
 
+Error: unhandled condition:
+Compound condition has these components: 
+#<record &assertion>
+#<record &message>
+    message : "?: requested allocation exceeds max object size: 23045824 \n"
+
 # Ikarus Scheme version 0.0.4-rc1+, 64-bit
 okadan@i5:~/PRIMES$ time ikarus --r6rs-script primesq2.scm
 
@@ -102,9 +120,9 @@ sys	0m0.068s
 
 okadan@i5:~/PRIMES$ time ikarus --r6rs-script primesv2.scm  <--- Good!
 
-real	1m54.664s
-user	1m54.560s
-sys	0m0.089s
+real	2m1.660s
+user	2m1.543s
+sys	0m0.108s
 
 okadan@i5:~/PRIMES$ time ikarus --r6rs-script primesq2.scm (10倍リミットテスト)
 50847534
@@ -114,9 +132,9 @@ sys	0m1.252s
 
 okadan@i5:~/PRIMES$ time ikarus --r6rs-script primesv2.scm (10倍バッファサイズテスト)
 
-real	61m17.893s
-user	60m36.648s
-sys	0m3.503s
+real	51m13.234s
+user	50m39.054s
+sys	0m2.875s
 
 # Chicken Version 5.1.0
 okadan@i5:~/PRIMES$ csc -optimize-level 5 primesq.scm
@@ -132,6 +150,45 @@ okadan@i5:~/PRIMES$ time sbcl --script primesq.lisp
 real	2m19.772s
 user	2m19.706s
 sys	0m0.041s
+
+okadan@i5:~/CPP_Lisp2$ time sbcl --script primesv.lisp  <--- OK
+
+real	3m32.961s
+user	3m32.784s
+sys	0m0.104s
+
+okadan@i5:~/CPP_Lisp2$ time sbcl --script primesv2.lisp  <--- 最適化 OK
+99999989
+
+real	3m22.388s
+user	3m22.315s
+sys	0m0.060
+
+okadan@i5:~/PRIMES$ time sbcl --script primesq2.lisp (10倍リミットテスト) <--- Heap exhausted NG!
+Heap exhausted during garbage collection: 0 bytes available, 16 requested.
+        Immobile Object Counts
+ Gen   GF type  fdefn symbol   code  Boxed   Cons    Raw   Code  SmMix  Mixed  LgRaw LgCode  LgMix Waste%       Alloc        Trig   Dirty GCs Mem-age
+  1     0    0      0      0      0      0   9924      0      0      0      0      0      0      0    0.8   322648992    10737418    9924   0  1.0000
+  2     0    3      6      0      6     10  14827      2      0      2      6      0      0      0    0.8   482513856     2000000       3   0  0.0000
+  3     0    0      0      0      0      0      0      0      0      0      0      0      0      0    0.0           0     2000000       0   0  0.0000
+  4     0    0      0      0      0      0      0      0      0      0      0      0      0      0    0.0           0     2000000       0   0  0.0000
+  5     0    0      0      0      0      0      0      0      0      0      0      0      0      0    0.0           0     2000000       0   0  0.0000
+  6   345  725  15100  25613  16953    315    122    184      2     14     11     10      0     55    3.0    22663040     2000000       1   0  0.0000
+  7     0    0      0      0      0      0   7284      0      0      0      0      0      0      0    0.8   236817408     2000000    7284   0  0.0000
+Tot   345  728  15106  25613  16959    325  32157    186      2     16     17     10      0     55    0.8  1064643296 [99.2% of 1073741824 max]
+GC control variables:
+   *GC-INHIBIT* = true
+   *GC-PENDING* = true
+   *STOP-FOR-GC-PENDING* = false
+fatal error encountered in SBCL pid 9339 tid 9339:
+Heap exhausted, game over.
+
+okadan@i5:~/CPP_Lisp2$ time sbcl --script primesv2.lisp (10倍バッファサイズテスト) <--- 最適化 OK
+999999937
+
+real	77m54.706s
+user	77m54.062s
+sys	0m0.572s
 
 # Scala code runner version 2.11.12
 okadan@i5:~/PRIMES$ scalac primes.scala
